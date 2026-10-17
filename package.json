@@ -12,7 +12,8 @@
     "agent": "uv run --directory backend logistics-agent",
     "build": "bun run --cwd frontend build",
     "lint": "bun run --cwd frontend lint",
-    "emulators": "firebase emulators:start --project demo-agent-war --only auth,firestore"
+    "emulators": "firebase emulators:start --project demo-agent-war --only auth,firestore",
+    "setup:firebase-admin": "bun scripts/setup-firebase-admin.ts"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

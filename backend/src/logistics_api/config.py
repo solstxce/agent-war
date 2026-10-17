@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     app_environment: str = "development"
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
     firebase_project_id: str = ""
+    google_application_credentials: str = ""
     firestore_emulator_host: str = ""
+    firebase_auth_emulator_host: str = ""
     google_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
     logistics_mcp_url: str = "http://127.0.0.1:8001/mcp"
@@ -44,3 +46,4 @@ def configuration_status() -> dict:
             "capabilities": ["geocoding", "point_to_point_driving_route"],
         },
     }
+
