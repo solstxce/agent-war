@@ -12,7 +12,7 @@ Open http://localhost:5173. `bun run build` checks TypeScript and produces `dist
 
 ## Configuration
 
-- `VITE_API_BASE_URL`: backend origin, defaults to `http://localhost:8000`. The dashboard calls `/api/health` with a five second timeout.
+- `VITE_API_BASE_URL`: backend origin, defaults to `http://127.0.0.1:8000`. Authenticated API calls attach a fresh Firebase ID token. Start the Python API before using operational screens.
 - `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID`: Firebase web app settings. All four are required before the client initializes. They are public identifiers, not service account credentials.
 - `VITE_USE_FIREBASE_EMULATORS`: `true` connects Auth at `127.0.0.1:9099` and Firestore at `127.0.0.1:8080` in Vite development mode only.
 
@@ -20,7 +20,13 @@ Restart Vite after editing environment variables. Keep secrets and service accou
 
 ## Current scope
 
-The responsive dashboard displays honest empty states and API connection status. Firebase Auth and Firestore clients are exported from `src/lib/firebase.ts`. The operations map loads Google Maps when configured, with loading, timeout, network and authorization error states. It displays no invented shipments or vehicles. Authentication screens, operational CRUD and recovery screens remain implementation work. A configured Firebase client does not prove a successful authenticated database connection.
+The public landing page is `/`. It uses the TasteSkill well-kept board direction with a read-only workspace explorer, getting-started panels, FAQs, reduced-motion support, and credited photographs. `/app` opens the authenticated workspace; `/app?mode=signup` opens registration for signed-out visitors. The landing page does not require Firebase or a running backend to render. Unknown routes show a page-not-found message.
+
+The responsive dashboard supports email/password account creation, sign-in, sign-out, organization onboarding and workspace selection. Enable Email/Password in Firebase Authentication. Once signed in, the backend verifies the Firebase ID token and returns the user's memberships. A new workspace makes the creator its owner.
+
+Delivery and fleet screens create, list, edit and delete real records through the backend. Owners and dispatchers can write; other roles cannot. Updates and deletions include record versions so stale edits are rejected. Lists load 100 records at a time with a Load more button; displayed counts describe only loaded records. Delivery windows use the operator's local timezone in forms and UTC on the API. Coordinates are optional pairs; records with coordinates appear on the map. No browser database writes or sample operational records are used.
+
+The operations map has loading, timeout, network and authorization error states. Recovery, assignment and dispatch workflows remain later phases. A configured Firebase client does not prove a successful authenticated database connection: Firestore, backend credentials and provider setup are required.
 
 ## Google Maps setup
 

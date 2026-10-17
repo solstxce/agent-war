@@ -1,56 +1,148 @@
-﻿import { useEffect, useState } from 'react'
-import { ArrowRight, Check, CircleAlert, LayoutDashboard, Package, Radio, RotateCw, Route, ShieldCheck, Truck } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { onAuthStateChanged, signOut, type User } from 'firebase/auth'
+import { LayoutDashboard, Package, Route, ShieldCheck, Truck } from 'lucide-react'
+import { auth } from '@/lib/firebase'
+import { api, type Workspace } from '@/lib/api'
+import { AuthGate } from '@/components/auth-gate'
+import { OperationsWorkspace } from '@/components/operations-workspace'
+import { ErrorNotice } from '@/components/error-notice'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { firebaseConfigured } from '@/lib/firebase'
-import { OperationsMap } from '@/components/operations-map'
-
-type Connection = 'checking' | 'connected' | 'unavailable'
-const apiBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
 export default function App() {
-  const [connection, setConnection] = useState<Connection>('checking')
-  const [attempt, setAttempt] = useState(0)
+  const [user, setUser] = useState<User | null>(null)
+  const [initializing, setInitializing] = useState(Boolean(auth))
   useEffect(() => {
-    const controller = new AbortController()
-    const timeout = window.setTimeout(() => controller.abort(), 5000)
-    let cancelled = false
-    fetch(`${apiBase}/api/health`, { signal: controller.signal }).then(async response => {
-      if (!response.ok) throw new Error('Health check failed')
-      const health: unknown = await response.json()
-      if (typeof health !== 'object' || health === null || !('status' in health) || health.status !== 'ok') throw new Error('Unexpected health response')
-      if (!cancelled) setConnection('connected')
-    }).catch(() => { if (!cancelled) setConnection('unavailable') }).finally(() => window.clearTimeout(timeout))
-    return () => { cancelled = true; controller.abort(); window.clearTimeout(timeout) }
-  }, [attempt])
-
-  function reconnect() { setConnection('checking'); setAttempt(value => value + 1) }
-  return <div className="app-shell">
-    <aside className="sidebar">
-      <a className="brand" href="#overview" aria-label="Relay home"><span className="brand-icon"><Route size={23} /></span>relay<span className="brand-dot">.</span></a>
-      <div className="workspace-label">DISPATCH WORKSPACE</div>
-      <nav aria-label="Main navigation"><a className="nav-item active" href="#overview"><LayoutDashboard size={18} /> Overview</a><a className="nav-item" href="#operations"><Package size={18} /> Deliveries</a><a className="nav-item" href="#operations"><Truck size={18} /> Fleet</a><a className="nav-item" href="#recovery"><CircleAlert size={18} /> Recovery</a></nav>
-      <div className="sidebar-note"><ShieldCheck size={20} /><strong>You stay in control</strong><p>Recovery plans require dispatcher approval before assignments change.</p></div>
-      <div className="sidebar-footer"><span className="avatar">D</span><div><strong>Dispatcher workspace</strong><small>Setup in progress</small></div></div>
-    </aside>
-    <div className="main-area">
-      <header className="topbar"><span className="text-muted-foreground">Operations <span className="mx-3">/</span> <span className="text-foreground">Overview</span></span><span className="environment"><span /> Development</span></header>
-      <main id="overview">
-        <div className="page-heading"><div><p className="eyebrow">DELIVERY RECOVERY</p><h1>Keep the day moving.</h1><p className="page-description">One place to see deliveries, manage your fleet, and recover from disruptions.</p></div><span className="setup-badge"><Radio size={14} /> Workspace setup</span></div>
-        <div className="status-strip" role="status"><span className={`status-dot ${connection === 'connected' ? 'online' : ''}`} /><strong>{connection === 'checking' ? 'Connecting to backend...' : connection === 'connected' ? 'Backend connected' : 'Backend unavailable'}</strong><span>{connection === 'connected' ? 'The service is responding. Configure Firebase to continue setup.' : 'Operational data will appear after services and authentication are configured.'}</span><Button variant="ghost" size="sm" onClick={reconnect} disabled={connection === 'checking'}><RotateCw size={14} /> Retry</Button></div>
-        <section className="metrics" aria-label="Operations summary">{[{ label: 'Deliveries today', icon: Package, note: 'Awaiting delivery data' }, { label: 'Available vehicles', icon: Truck, note: 'Awaiting fleet data' }, { label: 'Open incidents', icon: CircleAlert, note: 'Awaiting incident data' }].map(({label, icon: Icon, note}) => <Card key={label}><CardContent className="metric-content"><div className="metric-label">{label}<Icon size={18}/></div><div className="metric-value">—</div><p>{note}</p></CardContent></Card>)}</section>
-        <section className="content-grid" id="operations">
-          <Card className="operations-card"><CardHeader><CardTitle>Today's operation</CardTitle><CardDescription>Your deliveries and vehicle assignments will appear here.</CardDescription></CardHeader><CardContent><OperationsMap /></CardContent></Card>
-          <Card id="setup"><CardHeader><span className="eyebrow">GETTING STARTED</span><CardTitle>Connect your workspace</CardTitle><CardDescription>The foundation is ready. Connect services before dispatching.</CardDescription></CardHeader><CardContent className="setup-list"><SetupStep number="1" ready={connection === 'connected'} title="Backend service" description={connection === 'connected' ? 'Health endpoint is responding.' : 'Start the Python API to connect.'}/><SetupStep number="2" ready={firebaseConfigured} title="Firebase project" description={firebaseConfigured ? 'Client configuration is present.' : 'Add Firebase configuration to your environment.'}/><SetupStep number="3" ready={false} title="Your first delivery" description="Delivery management is the next implementation step."/><div className="setup-footnote"><ShieldCheck size={16}/><span>No sample shipments or simulated fleet counts are shown.</span></div></CardContent></Card>
-        </section>
-        <Card className="recovery-card" id="recovery"><CardContent className="recovery-content"><span className="recovery-icon"><Route size={25}/></span><div><span className="eyebrow">WHEN PLANS CHANGE</span><h2>Recover with a plan you can trust.</h2><p>Report a breakdown, review feasible reassignments, and approve the next move. Agent recovery tools will be connected in the next phase.</p></div><span className="coming-next">Next phase <ArrowRight size={16}/></span></CardContent></Card>
-        <footer className="page-footer">Relay · Delivery exception management<span>Every change, accountable.</span></footer>
-      </main>
-    </div>
-  </div>
+    if (!auth) return
+    return onAuthStateChanged(auth, next => { setUser(next); setInitializing(false) }, () => setInitializing(false))
+  }, [])
+  if (initializing) return <div className="session-loading" role="status"><span className="session-loading-brand">relay.</span><p>Restoring your session…</p></div>
+  if (!user) return <AuthGate />
+  return <SignedInWorkspace key={user.uid} user={user} />
 }
 
-function SetupStep({ number, ready, title, description }: {number: string; ready: boolean; title: string; description: string}) {
-  return <div className="setup-step"><span className={`step-number ${ready ? 'ready' : ''}`}>{ready ? <Check size={15}/> : number}</span><div><h3>{title}</h3><p>{description}</p></div></div>
+function SignedInWorkspace({ user }: { user: User }) {
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([])
+  const [activeId, setActiveId] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [hasLoaded, setHasLoaded] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [attempt, setAttempt] = useState(0)
+  const [section, setSection] = useState(window.location.hash || '#overview')
+  useEffect(() => {
+    const navigate = () => setSection(window.location.hash || '#overview')
+    window.addEventListener('hashchange', navigate)
+    return () => window.removeEventListener('hashchange', navigate)
+  }, [])
+  useEffect(() => {
+    const controller = new AbortController()
+    setLoading(true); setError('')
+    api<{ workspaces: Workspace[] }>('/api/me', { signal: controller.signal }).then(data => {
+      if (controller.signal.aborted) return
+      setHasLoaded(true)
+      setWorkspaces(data.workspaces)
+      setActiveId(previous => data.workspaces.some(workspace => workspace.id === previous) ? previous : data.workspaces[0]?.id || '')
+    }).catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : 'Could not load workspaces.') }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
+    return () => controller.abort()
+  }, [attempt])
+  async function createWorkspace(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const name = String(new FormData(event.currentTarget).get('name')).trim()
+    if (!name) return
+    setBusy(true); setError('')
+    try {
+      const workspace = await api<Workspace>('/api/workspaces', { method: 'POST', body: JSON.stringify({ name }) })
+      setWorkspaces(previous => [...previous, workspace]); setActiveId(workspace.id)
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not create workspace.') }
+    finally { setBusy(false) }
+  }
+  async function logout() {
+    try { if (auth) await signOut(auth) }
+    catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not sign out.') }
+  }
+  const workspace = workspaces.find(item => item.id === activeId)
+  return (
+    <div className="app-shell">
+      <a className="skip-link" href="#overview">Skip to workspace</a>
+      <aside className="sidebar">
+        <a className="brand" href="#overview" aria-label="Relay home">
+          <span className="brand-icon"><Route size={23} aria-hidden="true" /></span>
+          relay<span className="brand-dot">.</span>
+        </a>
+        <div className="workspace-label">DISPATCH WORKSPACE</div>
+        <nav aria-label="Main navigation">
+          {[
+            { href: '#overview', label: 'Overview', icon: LayoutDashboard },
+            { href: '#deliveries', label: 'Deliveries', icon: Package },
+            { href: '#fleet', label: 'Fleet', icon: Truck },
+          ].map(({ href, label, icon: Icon }) => (
+            <a key={href} className="nav-item" href={href} title={label}
+              aria-current={section === href ? 'page' : undefined} aria-label={label}>
+              <Icon size={18} aria-hidden="true" /><span>{label}</span>
+            </a>
+          ))}
+        </nav>
+        <div className="sidebar-note">
+          <ShieldCheck size={20} aria-hidden="true" />
+          <strong>Your workspace, protected</strong>
+          <p>Changes are validated by the backend and scoped to your organization.</p>
+        </div>
+        <div className="sidebar-footer">
+          <span className="avatar">{user.email?.[0]?.toUpperCase() || 'U'}</span>
+          <div><strong>{workspace?.name || 'New workspace'}</strong><small>{workspace?.role || 'Signed in'}</small></div>
+        </div>
+      </aside>
+      <div className="main-area">
+        <header className="topbar">
+          <div className="topbar-inner">
+            <span className="signed-in-email" title={user.email || undefined}>{user.email}</span>
+            <div className="workspace-controls">
+              {workspaces.length > 0 && (
+                <label className="workspace-picker">
+                  <span className="sr-only">Active workspace</span>
+                  <select value={activeId} onChange={event => setActiveId(event.target.value)}>
+                    {workspaces.map(item => <option key={item.id} value={item.id}>{item.name} · {item.role}</option>)}
+                  </select>
+                </label>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => void logout()}>Sign out</Button>
+            </div>
+          </div>
+        </header>
+        <main id="overview" tabIndex={-1}>
+          <div className="page-heading">
+            <p className="eyebrow">DELIVERY OPERATIONS</p>
+            <h1>{workspace?.name || (loading ? 'Your workspace' : !hasLoaded && error ? 'Workspace unavailable' : 'Create your workspace')}</h1>
+            <p className="page-description">Manage deliveries and fleet availability in one place.</p>
+          </div>
+          <ErrorNotice message={error}>
+            <Button variant="outline" size="sm" onClick={() => setAttempt(value => value + 1)}>Retry connection</Button>
+          </ErrorNotice>
+          {loading ? (
+            <div className="workspace-loading" role="status"><span className="loading-line" /><p>Loading your workspaces…</p></div>
+          ) : workspace ? (
+            <OperationsWorkspace key={workspace.id} workspace={workspace} />
+          ) : hasLoaded ? (
+            <Card className="onboarding-card">
+              <CardHeader>
+                <span className="onboarding-icon"><Truck size={28} aria-hidden="true" /></span>
+                <span className="eyebrow">LET'S GET STARTED</span>
+                <CardTitle>Set up your organization</CardTitle>
+                <CardDescription>You will become the owner of this workspace. Deliveries and vehicles are private to its members.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form className="operation-form" onSubmit={createWorkspace} aria-busy={busy}>
+                  <label>Organization name<input name="name" autoComplete="organization" required maxLength={120} placeholder="Your distribution business" /></label>
+                  <Button disabled={busy}>{busy ? 'Creating…' : 'Create workspace'}</Button>
+                </form>
+              </CardContent>
+            </Card>
+          ) : null}
+          <footer className="page-footer"><span>Relay · Delivery exception management</span><span>Every change, accountable.</span></footer>
+        </main>
+      </div>
+    </div>
+  )
 }
 

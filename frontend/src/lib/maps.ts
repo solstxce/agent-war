@@ -35,7 +35,7 @@ export function loadMaps() {
       previousHandler?.()
     }
     setOptions({ key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY.trim(), v: 'quarterly' })
-    library = importLibrary('maps')
+    library = importLibrary('maps').then(async maps => { await importLibrary('marker'); return maps })
   }
   if (authError) return Promise.reject(authError)
   return library

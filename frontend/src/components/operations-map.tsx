@@ -4,9 +4,22 @@ import { loadMaps, mapCenter, mapId, mapsConfigured, subscribeMapAuthError } fro
 
 type MapState = { status: 'loading' | 'ready' | 'error'; message?: string }
 
-export function OperationsMap() {
+export function OperationsMap({ locations = [] }: { locations?: { id: string; lat: number; lng: number; title: string }[] }) {
   const container = useRef<HTMLDivElement>(null)
   const [state, setState] = useState<MapState>({ status: 'loading' })
+  const mapInstance = useRef<google.maps.Map | null>(null)
+
+  useEffect(() => {
+    if (state.status !== 'ready' || !mapInstance.current) return
+    const markers = locations.map(location => new google.maps.Marker({ map: mapInstance.current, position: location, title: location.title }))
+    if (locations.length) {
+      const bounds = new google.maps.LatLngBounds()
+      locations.forEach(location => bounds.extend(location))
+      mapInstance.current.fitBounds(bounds, 50)
+      if (locations.length === 1) mapInstance.current.setZoom(13)
+    }
+    return () => markers.forEach(marker => marker.setMap(null))
+  }, [locations, state.status])
 
   useEffect(() => {
     if (!mapsConfigured) return
@@ -28,6 +41,7 @@ export function OperationsMap() {
         gestureHandling: 'cooperative', fullscreenControl: true,
       })
       window.clearTimeout(timeout)
+      mapInstance.current = map
       if (!failed) setState({ status: 'ready' })
     }).catch(error => {
       window.clearTimeout(timeout)
@@ -38,6 +52,7 @@ export function OperationsMap() {
       unsubscribe()
       window.clearTimeout(timeout)
       if (map) google.maps.event.clearInstanceListeners(map)
+      mapInstance.current = null
       container.current?.replaceChildren()
     }
   }, [])
@@ -51,6 +66,6 @@ export function OperationsMap() {
       <p>{missing ? 'Add VITE_GOOGLE_MAPS_API_KEY to the frontend environment and restart the app.' : state.message || 'Preparing the operations map.'}</p>
       {state.status === 'error' && <button type="button" className="map-reload" onClick={() => window.location.reload()}>Reload page</button>}
     </div>}
-    {!missing && state.status === 'ready' && <p className="map-data-note">Map connected. Delivery and vehicle locations will appear when operational data is available.</p>}
+    {!missing && state.status === 'ready' && <p className="map-data-note">{locations.length ? `${locations.length} loaded locations shown.` : 'No coordinates in the loaded records.'}</p>}
   </div>
 }

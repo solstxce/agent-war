@@ -9,7 +9,7 @@ const config = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 export const firebaseConfigured = Object.values(config).every(Boolean)
-export const firebaseApp = firebaseConfigured ? (getApps()[0] ?? initializeApp(config)) : null
+export const firebaseApp = firebaseConfigured ? (getApps()[0] ?? initializeApp({ ...config, messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID, storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET })) : null
 export const auth = firebaseApp ? getAuth(firebaseApp) : null
 export const db = firebaseApp ? getFirestore(firebaseApp) : null
 const emulatorState = globalThis as typeof globalThis & { __relayEmulatorsConnected?: boolean }
