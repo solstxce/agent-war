@@ -58,6 +58,25 @@ flowchart TD
 
 The model coordinates the workflow, but deterministic Python tools own eligibility, ranking evidence, capacity validation, transactional assignment, escalation, and audit logging. The system never splits shipments or searches another route.
 
+### Google ADK Delegation Graph
+
+```mermaid
+graph LR
+    R[ADK Runner] --> IC[IncidentCommander\nLlmAgent]
+    IC -->|AgentTool| FA[FleetAnalyst\nLlmAgent]
+    IC -->|AgentTool| RP[RecoveryPlanner\nLlmAgent]
+    IC -->|Python Function Tool| EX[execute_recovery]
+    FA -->|Python Function Tool| AF[analyze_fleet]
+    RP -->|Python Function Tool| PR[plan_recovery]
+    AF --> DB[(Firestore / SQLite)]
+    AF --> RT[Synthetic routing evidence]
+    PR --> AF
+    EX --> TX[Transactional RecoveryService]
+    TX --> DB
+```
+
+The Commander delegates in order: `FleetAnalyst` → `RecoveryPlanner` → `execute_recovery`. When `GOOGLE_API_KEY` is configured, the agents use the configured Gemini model. Without it, the same ADK graph runs with the explicitly labelled scripted demo model.
+
 - Synthetic routing uses deterministic coordinate math for mock distance/ETA. It makes no Maps API calls even if a key exists, and is not real road distance or driving ETA. Maps integration is deferred; the optional Routes adapter remains available.
 - Recovery either reassigns all pending parcels to an eligible same-route vehicle or records `manual_intervention_required` with a simulated dispatcher notification. Duplicate resolve returns 409.
 - Feedback is persisted and can make a bounded policy adjustment; it is not full reinforcement learning or model training, and does not override nearest-distance/ETA ranking.

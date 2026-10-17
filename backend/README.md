@@ -153,6 +153,23 @@ flowchart TD
 
 The model never receives authority to invent fleet records, select arbitrary IDs, bypass capacity, choose another route, split shipments, or write Firestore directly. The Fleet Analyst and Planner are ADK-delegated roles, while `analyze`, `plan`, and `execute` are server-bound deterministic Python tools. The execution transaction rechecks the incident, shipment ledger, candidate fleet snapshot, freshness, capacity, and routing origin before writing.
 
+The ADK-specific delegation is:
+
+```mermaid
+graph LR
+    R[ADK Runner] --> IC[IncidentCommander\nLlmAgent]
+    IC -->|AgentTool| FA[FleetAnalyst\nLlmAgent]
+    IC -->|AgentTool| RP[RecoveryPlanner\nLlmAgent]
+    IC -->|Function Tool| EX[execute_recovery]
+    FA -->|Function Tool| AF[analyze_fleet]
+    RP -->|Function Tool| PR[plan_recovery]
+    AF --> DB[(Firestore / SQLite)]
+    AF --> RT[Synthetic routing evidence]
+    PR --> AF
+    EX --> TX[RecoveryService transaction]
+    TX --> DB
+```
+
 - `GET /api/dashboard`: fleet, shipments, incidents, persisted runs, feedback, audit logs, policy, counts, and explicit storage/agent/routing labels.
 - `POST /api/incidents/simulate`: create a breakdown for scenario A or B; returns the existing open incident if already simulated.
 - `POST /api/incidents/{incident_id}/resolve`: run ADK analysis, planning, and transactional execution. No request body is needed.
