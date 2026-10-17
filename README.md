@@ -31,6 +31,33 @@ uv run --directory backend logistics-demo run --scenario B
 
 ## Scope And Safety
 
+## Recovery Agent Graph
+
+```mermaid
+flowchart TD
+    D[Dispatcher] -->|simulate breakdown| I[(Firestore or SQLite)]
+    D -->|resolve incident| C[Incident Commander]
+    C -->|delegates| F[Fleet Analyst]
+    F --> E[Filter same route, status, freshness, capacity]
+    E --> R[Synthetic routing evidence]
+    R --> C
+    C -->|delegates| P[Recovery Planner]
+    P --> Q[Rank distance first, ETA tie-break]
+    Q --> C
+    C --> V[Python revalidation and transaction]
+    V --> A{Single eligible vehicle?}
+    A -->|yes| S[Reassign all shipments]
+    A -->|no| X[Manual intervention required]
+    S --> O[resolved]
+    X --> M[Dispatcher notification]
+    O --> L[Audit log and recovery run]
+    M --> L
+    L --> FB[Dispatcher feedback]
+    FB --> PS[(policy_settings)]
+```
+
+The model coordinates the workflow, but deterministic Python tools own eligibility, ranking evidence, capacity validation, transactional assignment, escalation, and audit logging. The system never splits shipments or searches another route.
+
 - Synthetic routing uses deterministic coordinate math for mock distance/ETA. It makes no Maps API calls even if a key exists, and is not real road distance or driving ETA. Maps integration is deferred; the optional Routes adapter remains available.
 - Recovery either reassigns all pending parcels to an eligible same-route vehicle or records `manual_intervention_required` with a simulated dispatcher notification. Duplicate resolve returns 409.
 - Feedback is persisted and can make a bounded policy adjustment; it is not full reinforcement learning or model training, and does not override nearest-distance/ETA ranking.
