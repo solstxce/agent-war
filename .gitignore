@@ -22,5 +22,6 @@ service-account*.json
 .uv-temp/
 *.tsbuildinfo
 backend/artifacts/
+backend/.local/
 backend/.adk/
 backend/agents/**/.adk/

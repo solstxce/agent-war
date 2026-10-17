@@ -7,6 +7,7 @@ from google.auth.exceptions import GoogleAuthError
 from logistics_api.config import configuration_status, get_settings
 from logistics_api.firebase import guard_emulators
 from logistics_api.operations import router
+from logistics_api.recovery_api import router as recovery_router
 
 guard_emulators()
 app = FastAPI(title="Delivery Exception Manager", version="0.2.0")
@@ -18,6 +19,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 app.include_router(router)
+app.include_router(recovery_router)
 
 
 @app.exception_handler(GoogleAPICallError)
@@ -33,7 +35,7 @@ def health() -> dict:
     return {
         "status": "ok", "service": "delivery-exception-api",
         "environment": get_settings().app_environment, "integrations": configuration_status(),
-        "features": {"identity": True, "fleet_and_deliveries": True, "dispatch": False, "recovery": False, "feedback_learning": False},
+        "features": {"identity": True, "fleet_and_deliveries": True, "dispatch": False, "recovery": True, "feedback_learning": True},
     }
 
 

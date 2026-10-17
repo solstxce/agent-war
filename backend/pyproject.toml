@@ -23,6 +23,8 @@ logistics-api = "logistics_api.main:run"
 logistics-mcp = "logistics_api.mcp_server:run"
 logistics-agent = "logistics_api.agent_runtime:run"
 logistics-feedback = "logistics_api.observability:feedback"
+logistics-models = "logistics_api.models_cli:run"
+logistics-demo = "logistics_api.demo_cli:run"
 
 [build-system]
 requires = ["hatchling"]

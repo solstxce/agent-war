@@ -28,21 +28,21 @@ def guard_emulators() -> None:
 def get_firebase_app():
     settings = get_settings()
     guard_emulators()
-    if not settings.firebase_project_id:
+    if not settings.project_id:
         raise RuntimeError("Firebase project is not configured")
     try:
         return firebase_admin.get_app("logistics")
     except ValueError:
         credential = credentials.Certificate(settings.google_application_credentials) if settings.google_application_credentials else None
-        return firebase_admin.initialize_app(credential=credential, options={"projectId": settings.firebase_project_id}, name="logistics")
+        return firebase_admin.initialize_app(credential=credential, options={"projectId": settings.project_id}, name="logistics")
 
 
 @lru_cache
 def get_firestore_client() -> Client:
     settings = get_settings()
     guard_emulators()
-    if not settings.firebase_project_id:
+    if not settings.project_id:
         raise RuntimeError("Firebase project is not configured")
     if settings.firestore_emulator_host:
-        return Client(project=settings.firebase_project_id, credentials=AnonymousCredentials())
+        return Client(project=settings.project_id, credentials=AnonymousCredentials())
     return firestore.client(app=get_firebase_app())
