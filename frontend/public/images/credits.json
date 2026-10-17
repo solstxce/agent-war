@@ -1,6 +1,6 @@
 [
  {
-  "file": "frontend/public/images/aerial-view-of-glenn-highway-and-old.jpg",
+  "file": "frontend/src/assets/landing/aerial-view-of-glenn-highway-and-old.jpg",
   "media": "image",
   "ref": "commons:149170395",
   "title": "Aerial view of Glenn Highway and Old Glenn Highway interchange",
@@ -22,7 +22,7 @@
   "saved": "2026-10-17T07:20:56.307Z"
  },
  {
-  "file": "frontend/public/images/modern-warehouse-with-pallet-rack-storage-system.jpg",
+  "file": "frontend/src/assets/landing/modern-warehouse-with-pallet-rack-storage-system.jpg",
   "media": "image",
   "ref": "commons:9436500",
   "title": "Modern warehouse with pallet rack storage system",
@@ -46,7 +46,7 @@
   "saved": "2026-10-17T07:21:11.909Z"
  },
  {
-  "file": "frontend/public/images/pallets-imported-fruit-await-distribution.webp",
+  "file": "frontend/src/assets/landing/pallets-imported-fruit-await-distribution.webp",
   "media": "image",
   "ref": "openverse:43df6caf-19d4-4b23-ba10-3f5684e885a5",
   "title": "Pallets imported fruit await distribution",
@@ -68,7 +68,7 @@
   "saved": "2026-10-17T07:21:22.976Z"
  },
  {
-  "file": "frontend/public/images/provincial-highway-66-interchange-with-city-highway.jpg",
+  "file": "frontend/src/assets/landing/provincial-highway-66-interchange-with-city-highway.jpg",
   "media": "image",
   "ref": "commons:64476785",
   "title": "Provincial Highway 66 interchange with City Highway 115",

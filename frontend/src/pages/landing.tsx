@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import photoCredits from '../../public/images/credits.json'
+import highwayPhoto from '@/assets/landing/provincial-highway-66-interchange-with-city-highway.jpg'
+import warehousePhoto from '@/assets/landing/modern-warehouse-with-pallet-rack-storage-system.jpg'
+import loadingPhoto from '@/assets/landing/pallets-imported-fruit-await-distribution.webp'
+import valleyPhoto from '@/assets/landing/aerial-view-of-glenn-highway-and-old.jpg'
 import './landing.css'
 
 const stages = [
@@ -93,7 +97,7 @@ export default function Landing() {
           <Button asChild className="lp-button lp-hero-enter" data-enter="140"><a href="/app">Open your workspace <Arrow /></a></Button>
         </div>
         <figure className="lp-tile lp-hero-photo" data-shutter>
-          <img src="/images/provincial-highway-66-interchange-with-city-highway.jpg" alt="An aerial view of roads connecting fields and neighborhoods in Taiwan" width="1280" height="853" fetchPriority="high" />
+          <img src={highwayPhoto} alt="An aerial view of roads connecting fields and neighborhoods in Taiwan" width="1280" height="853" fetchPriority="high" />
           <figcaption>The work between here and there.</figcaption>
         </figure>
         <div className="lp-tile lp-hero-facts" data-enter="100">
@@ -114,7 +118,7 @@ export default function Landing() {
           <p className="lp-small" data-enter="140">Explore the current delivery and fleet fields. Your own workspace starts empty, ready for your operation.</p>
         </div>
         <div className="lp-tile lp-demo-tile" data-enter="100"><WorkspaceExplorer /></div>
-        <figure className="lp-tile lp-depot-photo" data-enter="0"><img src="/images/modern-warehouse-with-pallet-rack-storage-system.jpg" alt="Pallet racks and boxed goods inside a distribution warehouse" width="1920" height="1496" loading="lazy" /><figcaption>A place for what needs to move.</figcaption></figure>
+        <figure className="lp-tile lp-depot-photo" data-enter="0"><img src={warehousePhoto} alt="Pallet racks and boxed goods inside a distribution warehouse" width="1920" height="1496" loading="lazy" /><figcaption>A place for what needs to move.</figcaption></figure>
         <div className="lp-tile lp-record-note" data-enter="80"><p>Change a detail.<br />Keep the context.</p><span>When another person has changed a record, Relay asks you to refresh before saving over it.</span></div>
       </section>
 
@@ -129,7 +133,7 @@ export default function Landing() {
       </section>
 
       <section className="lp-board lp-next" aria-labelledby="lp-next-title">
-        <figure className="lp-tile lp-loading-photo" data-enter="0"><img src="/images/pallets-imported-fruit-await-distribution.webp" alt="A forklift moving fruit pallets at a distribution facility" width="1024" height="662" loading="lazy" /></figure>
+        <figure className="lp-tile lp-loading-photo" data-enter="0"><img src={loadingPhoto} alt="A forklift moving fruit pallets at a distribution facility" width="1024" height="662" loading="lazy" /></figure>
         <div className="lp-tile lp-next-copy"><h2 id="lp-next-title" data-enter="0">The next move.</h2><p data-enter="70">Assignment, fleet route optimization, and breakdown recovery are the next stage of Relay.</p><p className="lp-small" data-enter="140">Today, the workspace manages delivery and vehicle records. Dispatch and recovery workflows are planned, with dispatcher approval before assignments change.</p></div>
       </section>
 
@@ -139,7 +143,7 @@ export default function Landing() {
       </section>
 
       <section className="lp-board lp-close" aria-labelledby="lp-close-title">
-        <figure className="lp-tile lp-close-photo" data-enter="0"><img src="/images/aerial-view-of-glenn-highway-and-old.jpg" alt="A highway interchange crossing a green valley below mountains in Alaska" width="1872" height="1376" loading="lazy" /></figure>
+        <figure className="lp-tile lp-close-photo" data-enter="0"><img src={valleyPhoto} alt="A highway interchange crossing a green valley below mountains in Alaska" width="1872" height="1376" loading="lazy" /></figure>
         <div className="lp-tile lp-close-action"><h2 id="lp-close-title" data-enter="0">Put the day<br />in order.</h2><p data-enter="70">Start with your organization, your vehicles, and the deliveries ahead.</p><Button asChild className="lp-button" data-enter="140"><a href="/app?mode=signup">Create your workspace <Arrow /></a></Button></div>
         <div className="lp-tile lp-close-note" data-enter="90"><p>Your information.<br />A shared starting point.</p><a href="/app">Already have a workspace? Sign in <span aria-hidden="true">↗</span></a></div>
       </section>
