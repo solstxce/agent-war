@@ -57,6 +57,7 @@ DATA_MODE=local_demo
 ROUTING_MODE=synthetic_demo
 GOOGLE_API_KEY=
 GEMINI_MODEL=gemini-3.8-flash
+GEMINI_MODEL_FALLBACKS=["gemini-3.7-flash","gemini-3.6-flash","gemini-3.5-flash","gemini-flash-latest"]
 ```
 
 `backend/.env` is ignored by Git. Never commit API keys, Firebase service-account files, or Firebase ID tokens.
@@ -243,6 +244,8 @@ uv run --directory backend logistics-models --check gemini-3.8-flash
 ```
 
 The ADK workflow will report `agent_mode: gemini` when it uses Gemini. Without the key, it reports `adk_scripted_demo`; this still exercises the real ADK delegation graph but does not claim Gemini inference.
+
+If Gemini returns a temporary quota or availability response such as `429`, `449`, `500`, `502`, `503`, or `504`, the agents try the fallback models in `GEMINI_MODEL_FALLBACKS` in order. Authentication, permission, and invalid-request errors do not trigger a fallback because changing models cannot fix those configuration problems.
 
 Gemini quota, billing, and model availability are controlled by the Google account. A model-list success does not guarantee that an inference request will have quota.
 

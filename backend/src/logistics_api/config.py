@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     firebase_auth_emulator_host: str = ""
     google_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"
+    gemini_model_fallbacks: list[str] = [
+        "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-flash-latest",
+    ]
     logistics_mcp_url: str = "http://127.0.0.1:8001/mcp"
     google_maps_server_api_key: str = ""
     google_maps_api_key: str = ""

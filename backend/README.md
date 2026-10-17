@@ -27,6 +27,7 @@ APP_ENVIRONMENT=development
 DATA_MODE=auto
 ROUTING_MODE=synthetic_demo
 GEMINI_MODEL=gemini-3.8-flash
+GEMINI_MODEL_FALLBACKS=["gemini-3.7-flash","gemini-3.6-flash","gemini-3.5-flash","gemini-flash-latest"]
 ALLOW_CLOUD_DEMO_RESET=false
 LOCATION_MAX_AGE_SECONDS=900
 ```

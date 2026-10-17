@@ -60,6 +60,42 @@ class _ScriptedModel(BaseLlm):
         yield LlmResponse(content=types.Content(role="model", parts=[part]))
 
 
+class _FallbackGemini(BaseLlm):
+    """Try fallback models only for quota or temporary availability failures."""
+
+    def __init__(self, model_names, api_key):
+        super().__init__(model=model_names[0])
+        self.model_names = list(dict.fromkeys(model_names))
+        self.api_key = api_key
+        self.models_attempted = []
+
+    @staticmethod
+    def _is_available_error(exc):
+        text = f"{type(exc).__name__} {exc}".upper()
+        status = getattr(exc, "status_code", None) or getattr(exc, "code", None)
+        return status in {404, 429, 449, 500, 502, 503, 504} or any(
+            marker in text for marker in ("RESOURCE_EXHAUSTED", "UNAVAILABLE", "DEADLINE_EXCEEDED", "RATE_LIMIT")
+        )
+
+    async def generate_content_async(self, llm_request, stream=False):
+        for model_name in self.model_names:
+            self.models_attempted.append(model_name)
+            client = genai.Client(
+                api_key=self.api_key,
+                http_options=types.HttpOptions(retry_options=types.HttpRetryOptions(attempts=1)),
+            )
+            model = Gemini(model=model_name, client=client)
+            yielded = False
+            try:
+                async for response in model.generate_content_async(llm_request, stream=stream):
+                    yielded = True
+                    yield response
+                return
+            except Exception as exc:
+                if yielded or not self._is_available_error(exc) or model_name == self.model_names[-1]:
+                    raise
+
+
 async def run_recovery_agents(service, incident_id: str) -> dict:
     """Run three ADK roles and return only the service's persisted execution."""
     settings = get_settings()
@@ -67,6 +103,7 @@ async def run_recovery_agents(service, incident_id: str) -> dict:
     metadata = {
         "mode": mode,
         "model": settings.gemini_model if mode == "gemini" else "adk-scripted-demo",
+        "model_fallbacks": settings.gemini_model_fallbacks if mode == "gemini" else [],
         "label": "Gemini recovery agents" if mode == "gemini" else "Scripted ADK demo (not Gemini)",
         "events": [],
     }
@@ -86,14 +123,8 @@ async def run_recovery_agents(service, incident_id: str) -> dict:
         if mode == "adk_scripted_demo":
             return _ScriptedModel(model="adk-scripted-demo", role=role)
         try:
-            return Gemini(
-                model=settings.gemini_model,
-                client=genai.Client(
-                    api_key=settings.google_api_key,
-                    http_options=types.HttpOptions(
-                        retry_options=types.HttpRetryOptions(attempts=2)
-                    ),
-                ),
+            return _FallbackGemini(
+                [settings.gemini_model, *settings.gemini_model_fallbacks], settings.google_api_key
             )
         except Exception as exc:
             raise RuntimeError(f"Gemini recovery model initialization failed: {exc}") from exc
@@ -136,23 +167,24 @@ async def run_recovery_agents(service, incident_id: str) -> dict:
         """Transactionally revalidate and execute the server-side recovery plan."""
         return await call_service("execute")
 
+    model_instances = {}
     analyst = LlmAgent(
         name="fleet_analyst",
         description="FleetAnalyst: deterministic fleet analysis and maps evidence.",
-        model=model("analyst"),
+        model=model_instances.setdefault("analyst", model("analyst")),
         instruction="You are FleetAnalyst. Call analyze_fleet, then return its result as JSON. Do not invent candidates or evidence.",
         tools=[analyze_fleet],
     )
     planner = LlmAgent(
         name="recovery_planner",
         description="RecoveryPlanner: deterministic recovery ranking.",
-        model=model("planner"),
+        model=model_instances.setdefault("planner", model("planner")),
         instruction="You are RecoveryPlanner. Call plan_recovery, then return its result as JSON. The service owns ranking; do not supply candidate IDs.",
         tools=[plan_recovery],
     )
     commander = LlmAgent(
         name="IncidentCommander",
-        model=model("commander"),
+        model=model_instances.setdefault("commander", model("commander")),
         instruction=(
             "Call fleet_analyst first and wait for completion. Then call "
             "recovery_planner and wait for completion. Then call execute_recovery. "
