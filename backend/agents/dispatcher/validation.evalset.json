@@ -1,0 +1,80 @@
+{
+  "eval_set_id": "validation",
+  "name": "validation",
+  "eval_cases": [
+    {
+      "eval_id": "unsupported-dispatch",
+      "session_input": {
+        "app_name": "dispatcher",
+        "user_id": "evaluation",
+        "state": {}
+      },
+      "conversation": [
+        {
+          "invocation_id": "unsupported-dispatch",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Dispatch all my deliveries now."
+              }
+            ]
+          },
+          "final_response": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "Shipment management and dispatch are not implemented. I cannot dispatch deliveries."
+              }
+            ]
+          },
+          "intermediate_data": {
+            "tool_uses": []
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": "route-inputs",
+      "session_input": {
+        "app_name": "dispatcher",
+        "user_id": "evaluation",
+        "state": {}
+      },
+      "conversation": [
+        {
+          "invocation_id": "route-inputs",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Compute driving distance and duration from latitude 12.9716 longitude 77.5946 to latitude 12.9352 longitude 77.6245. If unavailable, report the blocker and do not invent an estimate."
+              }
+            ]
+          },
+          "final_response": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "Report the route distance and duration only if the tool succeeds; otherwise explain the returned blocker."
+              }
+            ]
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "compute_route",
+                "args": {
+                  "origin_latitude": 12.9716,
+                  "origin_longitude": 77.5946,
+                  "destination_latitude": 12.9352,
+                  "destination_longitude": 77.6245
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

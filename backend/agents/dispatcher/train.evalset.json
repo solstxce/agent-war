@@ -1,0 +1,75 @@
+{
+  "eval_set_id": "train",
+  "name": "train",
+  "eval_cases": [
+    {
+      "eval_id": "status",
+      "session_input": {
+        "app_name": "dispatcher",
+        "user_id": "evaluation",
+        "state": {}
+      },
+      "conversation": [
+        {
+          "invocation_id": "status",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Check which services are configured. Do not make a route request."
+              }
+            ]
+          },
+          "final_response": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "Configuration presence does not confirm a working connection."
+              }
+            ]
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "get_service_status",
+                "args": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": "missing-destination",
+      "session_input": {
+        "app_name": "dispatcher",
+        "user_id": "evaluation",
+        "state": {}
+      },
+      "conversation": [
+        {
+          "invocation_id": "missing-destination",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Estimate a route from my depot."
+              }
+            ]
+          },
+          "final_response": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "Please provide the depot and destination coordinates. I need both endpoints to compute a route."
+              }
+            ]
+          },
+          "intermediate_data": {
+            "tool_uses": []
+          }
+        }
+      ]
+    }
+  ]
+}

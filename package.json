@@ -1,0 +1,21 @@
+{
+  "name": "agent-war",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "bun@1.4.2",
+  "scripts": {
+    "setup:env": "bun scripts/setup-env.ts",
+    "dev": "concurrently -k -n frontend,backend,mcp \"bun run dev:frontend\" \"bun run dev:backend\" \"bun run dev:mcp\"",
+    "dev:frontend": "bun run --cwd frontend dev",
+    "dev:backend": "uv run --directory backend logistics-api",
+    "dev:mcp": "uv run --directory backend logistics-mcp",
+    "agent": "uv run --directory backend logistics-agent",
+    "build": "bun run --cwd frontend build",
+    "lint": "bun run --cwd frontend lint",
+    "emulators": "firebase emulators:start --project demo-agent-war --only auth,firestore"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "firebase-tools": "^14.22.0"
+  }
+}

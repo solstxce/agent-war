@@ -1,0 +1,10 @@
+{
+  "app_name": "dispatcher",
+  "train_eval_set": "train",
+  "validation_eval_set": "validation",
+  "eval_config": {
+    "criteria": {
+      "tool_trajectory_avg_score": 1.0
+    }
+  }
+}
