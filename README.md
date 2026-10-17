@@ -6,6 +6,29 @@ Backend-first vehicle-breakdown recovery using Python, FastAPI, Google ADK, Fire
 
 ## Backend Quickstart
 
+For the complete copy-and-run guide, see [`instruction-to-runs.md`](instruction-to-runs.md).
+
+### Run On Another Laptop
+
+```powershell
+git clone https://github.com/solstxce/agent-war.git
+Set-Location agent-war
+uv sync --directory backend --locked
+Copy-Item backend/.env.example backend/.env
+uv run --directory backend logistics-api
+```
+
+In a second terminal, run the local demo:
+
+```powershell
+uv run --directory backend logistics-demo seed
+uv run --directory backend logistics-demo run --scenario A
+uv run --directory backend logistics-demo reset
+uv run --directory backend logistics-demo run --scenario B
+```
+
+The default local demo uses SQLite, synthetic routing, and the scripted ADK model. Add a backend-only `GOOGLE_API_KEY` to use Gemini; never commit `backend/.env` or place server credentials in frontend files.
+
 Run from the repository root in PowerShell. Install uv; it provisions the pinned Python version. Create the environment file only if it does not already exist:
 
 ```powershell
